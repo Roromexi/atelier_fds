@@ -10,7 +10,7 @@ from metrics import MetricLogger
 from agent import Mario
 from wrappers import ResizeObservation, SkipFrame
 
-env = gym_super_mario_bros.make('SuperMarioBros-1-1-v0')
+env = gym_super_mario_bros.make('SuperMarioBros-v0')
 
 env = JoypadSpace(
     env,
