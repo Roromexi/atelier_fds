@@ -17,7 +17,7 @@ FONT_NAME = "arial"
 FONT_SIZE = 24
 SCOREBOARD_FILE = "scoreboard.csv" # fichier où sont stockés les scores 
 CURRENT_LEVEL = 1
-LEVEL_DISTANCES = {1: 3155, 2: 4000, 3: 4000}
+LEVEL_DISTANCES = {1: 3155, 2: 3155, 3: 4000}
 
 # ----- Initialisation -----
 pygame.init()
