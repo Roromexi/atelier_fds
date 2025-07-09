@@ -1,3 +1,4 @@
+# ----- Importation -----
 import pygame
 import gym
 import time
@@ -8,13 +9,15 @@ from pathlib import Path
 from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 from nes_py.wrappers import JoypadSpace
 
+
 # ----- Constantes -----
-SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
-BACKGROUND_COLOR = (135, 206, 250)
+SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600 # Fond
+BACKGROUND_COLOR = (135, 206, 250) # couleurs du fond
 FONT_NAME = "arial"
 FONT_SIZE = 24
-SCOREBOARD_FILE = "scoreboard.csv"
-CURRENT_LEVEL = 1  # À adapter si multi-niveaux plus tard
+SCOREBOARD_FILE = "scoreboard.csv" # fichier où sont stockés les scores 
+CURRENT_LEVEL = 1
+LEVEL_DISTANCES = {1: 3186, 2: 4000, 3: 4000}
 
 # ----- Initialisation -----
 pygame.init()
@@ -23,9 +26,10 @@ pygame.display.set_caption("Mario IA - Joueur Humain")
 font = pygame.font.SysFont(FONT_NAME, FONT_SIZE)
 clock = pygame.time.Clock()
 
+
 # ----- Pseudo -----
 def ask_pseudo():
-    input_box = pygame.Rect(SCREEN_WIDTH // 2 - 150, SCREEN_HEIGHT // 2, 300, 40)
+    input_box = pygame.Rect(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50, 300, 40)
     pseudo = ""
     color_inactive = pygame.Color("lightskyblue3")
     color_active = pygame.Color("dodgerblue2")
@@ -35,8 +39,8 @@ def ask_pseudo():
         screen.fill(BACKGROUND_COLOR)
         pygame.draw.rect(screen, (48, 200, 48), (0, SCREEN_HEIGHT - 100, SCREEN_WIDTH, 100))
 
-        title = font.render("Entrez votre pseudo", True, (255, 255, 255))
-        screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, SCREEN_HEIGHT // 2 - 60))
+        title = font.render("Entrez votre pseudo", True, (0,0,0))
+        screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, SCREEN_HEIGHT // 2 - 85))
 
         txt_surface = font.render(pseudo, True, (0, 0, 0))
         width = max(200, txt_surface.get_width() + 10)
@@ -101,11 +105,13 @@ def play_game(pseudo):
         keys = pygame.key.get_pressed()
         action = 0
         if keys[pygame.K_RIGHT]:
-            action = 1
+            action = 1 #avancer vers la droite
         if keys[pygame.K_SPACE] or keys[pygame.K_UP]:
-            action = 2
+            action = 2 # sauter et avancer vers la droite 
+        if keys[pygame.K_DOWN] :
+            action = 3 # sprinter à droite 
         if keys[pygame.K_LEFT]:
-            action = 6
+            action = 6 # avancer à gauche 
 
         obs, reward, done, info = env.step(action)
         total_reward += reward
@@ -119,14 +125,20 @@ def play_game(pseudo):
     env.close()
     elapsed_time = time.time() - start_time
     distance = info.get("x_pos", 0)
-    percent_done = min(distance / 3186, 1.0) * 100  # 3186 ≈ fin du niveau
+
+    # Calcul du pourcebtage de progression en fonction du niveau dans lequel tu es 
+    max_distance = LEVEL_DISTANCES.get(CURRENT_LEVEL, 3186) # 3186 ≈ fin du niveau
+    percent_done = min(distance / max_distance, 1.0) * 100  
+    level = info.get("stage", 1)
+
     return {
         "pseudo": pseudo,
-        "niveau": CURRENT_LEVEL,
+        "niveau": level,
         "progression": str(round(percent_done, 1)),
         "temps": str(round(elapsed_time, 2)),
         "score": str(round(total_reward, 2))
     }
+
 
 # ----- Scoreboard Affichage -----
 def show_scoreboard(new_entry):
@@ -157,6 +169,7 @@ def show_scoreboard(new_entry):
 
     save_scoreboard(scoreboard)
 
+
     # ----- Affichage Pygame -----
     showing = True
     font_title = pygame.font.SysFont(FONT_NAME, 28, bold=True)
@@ -164,11 +177,11 @@ def show_scoreboard(new_entry):
 
     while showing:
         screen.fill((0, 0, 0))
-        title = font_title.render("🏆 Classement des Joueurs 🏆", True, (255, 255, 255))
+        title = font_title.render("Classement des Joueurs", True, (255, 255, 255))
         screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 30))
 
         headers = ["#", "Pseudo", "Niveau", "Progression (%)", "Temps (s)", "Score"]
-        col_widths = [40, 160, 100, 150, 100, 100]
+        col_widths = [40, 160, 100, 170, 110, 100]
         for i, header in enumerate(headers):
             label = font_data.render(header, True, (255, 255, 0))
             screen.blit(label, (50 + sum(col_widths[:i]), 80))
