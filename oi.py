@@ -17,7 +17,7 @@ FONT_NAME = "arial"
 FONT_SIZE = 24
 SCOREBOARD_FILE = "scoreboard.csv" # fichier où sont stockés les scores 
 CURRENT_LEVEL = 1
-LEVEL_DISTANCES = {1: 3155, 2: 3155, 3: 4000}
+LEVEL_DISTANCES = {1: 3155, 2: 3155, 3: 2425, 4: 2260}
 
 # ----- Initialisation -----
 pygame.init()
@@ -91,8 +91,9 @@ def play_game(pseudo):
     env = JoypadSpace(env, SIMPLE_MOVEMENT)
     obs = env.reset()
     done = False
-    total_reward = 0
     start_time = time.time()
+   # lives = 3
+    
 
     while not done:
         screen.fill(BACKGROUND_COLOR)
@@ -100,6 +101,9 @@ def play_game(pseudo):
         surf = pygame.surfarray.make_surface(frame.swapaxes(0, 1))
         surf = pygame.transform.scale(surf, (SCREEN_WIDTH, SCREEN_HEIGHT))
         screen.blit(surf, (0, 0))
+        #lives_text = font.render(f"x {lives}", True, (255,255,255))
+        #screen.blit(lives_text, (120,10))
+
         pygame.display.flip()
 
         keys = pygame.key.get_pressed()
@@ -114,8 +118,9 @@ def play_game(pseudo):
             action = 6 # avancer à gauche 
 
         obs, reward, done, info = env.step(action)
+
         print("x_pos:", info["x_pos"], "| world:", info.get("world"), "| stage:", info.get("stage"))
-        total_reward += reward
+        
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -137,7 +142,7 @@ def play_game(pseudo):
         "niveau": level,
         "progression": str(round(percent_done, 1)),
         "temps": str(round(elapsed_time, 2)),
-        "score": str(round(total_reward, 2))
+        "score": str(info.get("score", 0))
     }
 
 
@@ -182,7 +187,7 @@ def show_scoreboard(new_entry):
         screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 30))
 
         headers = ["#", "Pseudo", "Niveau", "Progression (%)", "Temps (s)", "Score"]
-        col_widths = [40, 160, 100, 170, 110, 100]
+        col_widths = [40, 200, 100, 170, 110, 100]
         for i, header in enumerate(headers):
             label = font_data.render(header, True, (255, 255, 0))
             screen.blit(label, (50 + sum(col_widths[:i]), 80))
