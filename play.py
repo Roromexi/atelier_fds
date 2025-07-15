@@ -119,7 +119,7 @@ def play_game(pseudo):
 
         obs, reward, done, info = env.step(action)
 
-        print("x_pos:", info["x_pos"], "| world:", info.get("world"), "| stage:", info.get("stage"))
+       
         
 
         for event in pygame.event.get():

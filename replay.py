@@ -35,7 +35,7 @@ mario.exploration_rate = mario.exploration_rate_min
 
 logger = MetricLogger(save_dir)
 
-episodes = 100
+episodes = 10
 
 for e in range(episodes):
 
@@ -60,7 +60,7 @@ for e in range(episodes):
 
     logger.log_episode()
 
-    if e % 20 == 0:
+    if e % 1 == 0:
         logger.record(
             episode=e,
             epsilon=mario.exploration_rate,
