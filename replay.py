@@ -9,6 +9,8 @@ from nes_py.wrappers import JoypadSpace
 from metrics import MetricLogger
 from agent import Mario
 from wrappers import ResizeObservation, SkipFrame
+import cv2
+
 
 env = gym_super_mario_bros.make('SuperMarioBros-v0')
 
@@ -24,7 +26,11 @@ env = ResizeObservation(env, shape=84)
 env = TransformObservation(env, f=lambda x: x / 255.)
 env = FrameStack(env, num_stack=4)
 
+# ✅ Patch pour désactiver l'affichage et éviter pyglet
+env.render = lambda *args, **kwargs: None
+
 env.reset()
+
 
 save_dir = Path('checkpoints') / datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')
 save_dir.mkdir(parents=True)
@@ -40,22 +46,33 @@ episodes = 10
 for e in range(episodes):
 
     state = env.reset()
+    scale_factor = 3  # ajuste la taille ici
 
     while True:
+        frame = env.unwrapped.screen
+        if frame is not None:
+            frame_bgr = frame[..., ::-1]
+            height, width = frame_bgr.shape[:2]
+            frame_resized = cv2.resize(frame_bgr, (width * scale_factor, height * scale_factor), interpolation=cv2.INTER_NEAREST)
 
-        env.render()
+            cv2.imshow("Mario", frame_resized)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
 
         action = mario.act(state)
-
         next_state, reward, done, info = env.step(action)
 
         mario.cache(state, next_state, action, reward, done)
-
         logger.log_step(reward, None, None)
-
         state = next_state
 
-        if done or info['flag_get']:
+        if info['flag_get']:
+            print(f"Time = {400 - info['time']} secondes")
+            print("flag!")
+            break
+        elif done:
+            print(f"Time = {400 - info['time']} secondes")
+            print("done!")
             break
 
     logger.log_episode()
@@ -66,3 +83,5 @@ for e in range(episodes):
             epsilon=mario.exploration_rate,
             step=mario.curr_step
         )
+
+cv2.destroyAllWindows()

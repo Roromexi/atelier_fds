@@ -27,11 +27,11 @@ dependencies:
     - pygame==2.6.1
     - gym-super-mario-bros
     - nes-py==8.1.1
-    - numpy==1.18.4
+    - numpy==1.20
     - opencv-python==4.2.0.34
     - pillow==7.1.2
     - pyglet==1.5.5
-    - scipy==1.4.1
+    - scipy==1.10.1
     - torch==1.5.0
     - torchvision==0.6.0
     - tqdm==4.46.0
