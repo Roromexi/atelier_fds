@@ -35,19 +35,18 @@ env.reset()
 save_dir = Path('checkpoints') / datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')
 save_dir.mkdir(parents=True)
 
-checkpoint = Path('trained_mario.chkpt')
+checkpoint = Path('checkpoints/2025-06-30T08-55-23/mario_net_4.chkpt')
 mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=save_dir, checkpoint=checkpoint)
 mario.exploration_rate = mario.exploration_rate_min
 
 logger = MetricLogger(save_dir)
 
-episodes = 200
+episodes = 10
 
 for e in range(episodes):
 
     state = env.reset()
     scale_factor = 3  # ajuste la taille ici
-    level_finished = 0
 
     while True:
         frame = env.unwrapped.screen
@@ -68,11 +67,9 @@ for e in range(episodes):
         state = next_state
 
         if info['flag_get']:
-            level_finished += 1
             print(f"Time = {400 - info['time']} secondes")
             print("flag!")
             break
-
         elif done:
             print(f"Time = {400 - info['time']} secondes")
             print("done!")
@@ -84,8 +81,7 @@ for e in range(episodes):
         logger.record(
             episode=e,
             epsilon=mario.exploration_rate,
-            step=mario.curr_step,
-            flag_get = level_finished
+            step=mario.curr_step
         )
 
 cv2.destroyAllWindows()
