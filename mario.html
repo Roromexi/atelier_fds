@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Comparaison IA Mario - n_stack</title>
+  <style>
+    body {
+      background-image: url("IMG_VIDEO/wallpaper_mario.png");
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      color: black;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      padding: 20px;
+    }
+    h1{
+        text-align: center;
+        color: #ffffff;
+        text-shadow: 2px 2px 4px #000;
+    }
+    table {
+        background-color: rgba(255, 255, 255, 0.6);
+        border-collapse: collapse;
+        width: 100%;
+        text-align: center;
+        margin-top: 20px;
+        border-radius: 10px;
+        backdrop-filter: blur(3px);
+    }
+    th, td {
+      border: 1px solid #444;
+      padding: 10px;
+    }
+    th {
+      background-color: rgba(255, 255, 255, 0.6);
+      text-align: center;
+      vertical-align: middle;
+      padding: 10px;
+      border: none;
+    }
+    .video-container {
+  background-color: rgba(255, 255, 255, 0.6); /* même fond que le tableau */
+  padding: 10px;
+  border-radius: 10px;
+  backdrop-filter: blur(3px); /* effet doux si activé */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+video {
+  width: 100%;
+  height: auto;
+  display: block;
+
+}
+
+    caption {
+      font-size: 1.5em;
+      margin-bottom: 10px;
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎮 Comparaison des performances de l’IA selon le paramètre <code>n_stack</code></h1>
+
+  <table>
+    <caption>Évolution de l'IA selon la valeur de <code>n_stack</code></caption>
+    <thead>
+      <tr>
+        <td> </td>
+        <th>
+            <div class="video-container"><video src="IMG_VIDEO/IA_debutante.mp4" autoplay loop muted></video></div></th>
+        <th>
+            <div class="video-container"><video src="IMG_VIDEO/IA_avancee_n_stack2.mp4" autoplay loop muted></video></div></th>
+        
+        <th>
+            <div class="video-container"><video src="IMG_VIDEO/IA_avancee_n_stack4.mp4" autoplay loop muted></video></div></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>n_stack</strong></td>
+        <td>1</td>
+        <td>2</td>
+        <td>4</td>
+      </tr>
+      <tr>
+        <td><strong>Training steps</strong></td>
+        <td>6.2M</td>
+        <td>9.6M</td>
+        <td>10M</td>
+      </tr>
+      <tr>
+        <td><strong>Episode score</strong></td>
+        <td>1723</td>
+        <td>3062</td>
+        <td>3066</td>
+      </tr>
+      <tr>
+        <td><strong>Episode steps</strong></td>
+        <td>8019</td>
+        <td>1060</td>
+        <td>1118</td>
+      </tr>
+      <tr>
+        <td><strong>Completed level?</strong></td>
+        <td>❌</td>
+        <td>✅</td>
+        <td>✅</td>
+      </tr>
+    </tbody>
+  </table>
+
+</body>
+</html>
