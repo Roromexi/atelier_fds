@@ -214,3 +214,5 @@ credentials.json
 *.tar.gz
 *.rar
 *.7z
+
+/checkpoints
