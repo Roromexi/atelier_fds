@@ -41,19 +41,12 @@ mario.exploration_rate = mario.exploration_rate_min
 
 logger = MetricLogger(save_dir)
 
-episodes = 200
+episodes = 10
 
 for e in range(episodes):
-    video_writer = None
-    record_episode = e in [1, 100] or e % 500 == 0
-    if record_episode:
-        # On initialise la vidéo après le premier frame pour connaître width et height
-        video_path = save_dir / f"mario_episode_{e}.avi"
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Essayer MJPEG
 
     state = env.reset()
     scale_factor = 3  # ajuste la taille ici
-    level_finished = 0
 
     while True:
         frame = env.unwrapped.screen
@@ -61,13 +54,6 @@ for e in range(episodes):
             frame_bgr = frame[..., ::-1]
             height, width = frame_bgr.shape[:2]
             frame_resized = cv2.resize(frame_bgr, (width * scale_factor, height * scale_factor), interpolation=cv2.INTER_NEAREST)
-
-            # Initialisation du VideoWriter (si on ne l’a pas encore fait)
-            if record_episode and video_writer is None:
-                video_writer = cv2.VideoWriter(str(video_path), fourcc, 30.0, (frame_resized.shape[1], frame_resized.shape[0]))
-
-            if video_writer:
-                video_writer.write(frame_resized)
 
             cv2.imshow("Mario", frame_resized)
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -81,17 +67,13 @@ for e in range(episodes):
         state = next_state
 
         if info['flag_get']:
-            level_finished += 1
             print(f"Time = {400 - info['time']} secondes")
             print("flag!")
             break
-
         elif done:
             print(f"Time = {400 - info['time']} secondes")
             print("done!")
             break
-        if video_writer:
-            video_writer.release()
 
     logger.log_episode()
 
@@ -99,9 +81,7 @@ for e in range(episodes):
         logger.record(
             episode=e,
             epsilon=mario.exploration_rate,
-            step=mario.curr_step,
-            flag_get = level_finished
+            step=mario.curr_step
         )
-
 
 cv2.destroyAllWindows()
