@@ -47,6 +47,8 @@ for e in range(episodes):
 
     state = env.reset()
     scale_factor = 3  # ajuste la taille ici
+    avancee = 0
+    position = 0 
 
     while True:
         frame = env.unwrapped.screen
@@ -66,6 +68,12 @@ for e in range(episodes):
         logger.log_step(reward, None, None)
         state = next_state
 
+
+        # Calcul de la progression 
+        distance = info.get("x_pos", 0)
+        percent_done = min(distance / 3155, 1.0) * 100 
+
+        #Condition d'arret si le mario atteind le drapeau 
         if info['flag_get']:
             level_finished += 1
             print(f"Time = {400 - info['time']} secondes")
@@ -84,7 +92,8 @@ for e in range(episodes):
             episode=e,
             epsilon=mario.exploration_rate,
             step=mario.curr_step,
-            flag_get = level_finished
+            flag_get = level_finished, 
+            progression = percent_done 
         )
 
 

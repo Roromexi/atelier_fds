@@ -66,6 +66,7 @@ for e in range(episodes):
         logger.log_step(reward, None, None)
         state = next_state
 
+        
         if info['flag_get']:
             print(f"Time = {400 - info['time']} secondes")
             print("flag!")
