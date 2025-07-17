@@ -1,99 +1,246 @@
-import random, datetime
-from pathlib import Path
-
+# ----- Importation -----
+import pygame
 import gym
-import gym_super_mario_bros
-from gym.wrappers import FrameStack, GrayScaleObservation, TransformObservation
+import time
+import csv
+import os
+from datetime import datetime
+from pathlib import Path
+from gym_super_mario_bros.actions import SIMPLE_MOVEMENT
 from nes_py.wrappers import JoypadSpace
 
-from metrics import MetricLogger
-from agent import Mario
-from wrappers import ResizeObservation, SkipFrame
-import cv2
+
+# ----- Constantes -----
+SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600 # Fond
+BACKGROUND_COLOR = (135, 206, 250) # couleurs du fond
+FONT_NAME = "arial"
+FONT_SIZE = 24
+SCOREBOARD_FILE = "scoreboard.csv" # fichier où sont stockés les scores 
+CURRENT_LEVEL = 1
+LEVEL_DISTANCES = {1: 3155, 2: 3155, 3: 2425, 4: 2260} # position du drapeau de chaque niveau du monde 1 sur l'axe x
+
+# ----- Initialisation -----
+pygame.init()
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Mario IA - Joueur Humain")
+font = pygame.font.SysFont(FONT_NAME, FONT_SIZE)
+clock = pygame.time.Clock()
 
 
-env = gym_super_mario_bros.make('SuperMarioBros-v0')
-
-env = JoypadSpace(
-    env,
-    [['right'],
-    ['right', 'A']]
-)
-
-env = SkipFrame(env, skip=4)
-env = GrayScaleObservation(env, keep_dim=False)
-env = ResizeObservation(env, shape=84)
-env = TransformObservation(env, f=lambda x: x / 255.)
-env = FrameStack(env, num_stack=4)
-
-# ✅ Patch pour désactiver l'affichage et éviter pyglet
-env.render = lambda *args, **kwargs: None
-
-env.reset()
-
-
-save_dir = Path('checkpoints') / datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')
-save_dir.mkdir(parents=True)
-
-checkpoint = Path('trained_mario.chkpt')
-mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=save_dir, checkpoint=checkpoint)
-mario.exploration_rate = mario.exploration_rate_min
-
-logger = MetricLogger(save_dir)
-
-episodes = 200
-
-for e in range(episodes):
-
-    state = env.reset()
-    scale_factor = 3  # ajuste la taille ici
-    level_finished = 0
-    avancee = 0
-    position = 0 
+# ----- Pseudo -----
+def ask_pseudo():
+    input_box = pygame.Rect(SCREEN_WIDTH // 2 - 100, SCREEN_HEIGHT // 2 - 50, 300, 40)
+    pseudo = ""
+    color_inactive = pygame.Color("lightskyblue3")
+    color_active = pygame.Color("dodgerblue2")
+    color = color_active
 
     while True:
-        frame = env.unwrapped.screen
-        if frame is not None:
-            frame_bgr = frame[..., ::-1]
-            height, width = frame_bgr.shape[:2]
-            frame_resized = cv2.resize(frame_bgr, (width * scale_factor, height * scale_factor), interpolation=cv2.INTER_NEAREST)
+        # Affichage pour la fenetre du pseudo 
+        screen.fill(BACKGROUND_COLOR)
+        pygame.draw.rect(screen, (48, 200, 48), (0, SCREEN_HEIGHT - 100, SCREEN_WIDTH, 100))
 
-            cv2.imshow("Mario", frame_resized)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+        title = font.render("Entrez votre pseudo", True, (0,0,0))
+        screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, SCREEN_HEIGHT // 2 - 85))
 
-        action = mario.act(state)
-        next_state, reward, done, info = env.step(action)
+        txt_surface = font.render(pseudo, True, (0, 0, 0))
+        width = max(200, txt_surface.get_width() + 10)
+        input_box.w = width
+        pygame.draw.rect(screen, (255, 255, 255), input_box)
+        screen.blit(txt_surface, (input_box.x + 5, input_box.y + 5))
+        pygame.draw.rect(screen, color, input_box, 2)
 
-        mario.cache(state, next_state, action, reward, done)
-        logger.log_step(reward, None, None)
-        state = next_state
+        pygame.display.flip()
 
-        distance = info.get("x_pos", 0)
-        percent_done = min(distance / 3155, 1.0) * 100  
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
 
-        if info['flag_get']:
-            level_finished += 1
-            print(f"Time = {400 - info['time']} secondes")
-            print("flag!")
-            done = True 
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN and pseudo.strip():
+                    return pseudo.strip()
+                elif event.key == pygame.K_BACKSPACE:
+                    pseudo = pseudo[:-1]
+                else:
+                    if len(pseudo) < 15:
+                        pseudo += event.unicode
 
-        elif done:
-            
-            print(f"Time = {400 - info['time']} secondes")
-            print("done!")
-            print(f"{percent_done} % de fini")
-            break
+        clock.tick(30)
 
-    logger.log_episode()
+# ----- Scoreboard -----
+def load_scoreboard():
+    scoreboard = []
+    if os.path.exists(SCOREBOARD_FILE):
+        with open(SCOREBOARD_FILE, newline='', encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                scoreboard.append(row)
+    return scoreboard
 
-    if e % 1 == 0:
-        logger.record(
-            episode=e,
-            epsilon=mario.exploration_rate,
-            step=mario.curr_step,
-            flag_get = level_finished,
-            progression = percent_done 
+def save_scoreboard(scoreboard):
+    with open(SCOREBOARD_FILE, "w", newline='', encoding="utf-8") as f:
+        fieldnames = ["pseudo", "niveau", "progression", "temps", "score"]
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for entry in scoreboard:
+            writer.writerow(entry)
+
+# ----- Jeu -----
+def play_game(pseudo):
+    env = gym.make("SuperMarioBros-v0")
+    env = JoypadSpace(env, SIMPLE_MOVEMENT)
+    obs = env.reset()
+    done = False
+    start_time = time.time()    
+
+    while not done:
+        screen.fill(BACKGROUND_COLOR)
+        frame = env.render(mode="rgb_array")
+        surf = pygame.surfarray.make_surface(frame.swapaxes(0, 1))
+        surf = pygame.transform.scale(surf, (SCREEN_WIDTH, SCREEN_HEIGHT))
+        screen.blit(surf, (0, 0))
+
+        pygame.display.flip()
+
+        # Touches pour les actions de mario
+        keys = pygame.key.get_pressed()
+        action = 0
+        if keys[pygame.K_RIGHT]:
+            action = 1 #avancer vers la droite
+        if keys[pygame.K_SPACE] or keys[pygame.K_UP]:
+            action = 2 # sauter et avancer vers la droite 
+        if keys[pygame.K_DOWN] :
+            action = 3 # sprinter à droite 
+        if keys[pygame.K_LEFT]:
+            action = 6 # avancer à gauche 
+        # Avec ces actions là, il n'est pas possible de sauter à gauche, quand on saute on va automatiquement à droite
+
+        obs, reward, done, info = env.step(action)
+
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                done = True
+
+        clock.tick(60)
+
+    env.close()
+    elapsed_time = time.time() - start_time
+    distance = info.get("x_pos", 0)
+
+    # Calcul du pourcentage de progression en fonction du niveau dans lequel vous êtes
+    max_distance = LEVEL_DISTANCES.get(CURRENT_LEVEL, 3186) 
+    percent_done = min(distance / max_distance, 1.0) * 100  
+    level = info.get("stage", 1)
+
+    # Renvoie des infos pour le scoreboard à la fin
+    return {
+        "pseudo": pseudo,
+        "niveau": level,
+        "progression": str(round(percent_done, 1)),
+        "temps": str(round(elapsed_time, 2)),
+        "score": str(info.get("score", 0))
+    }
+
+
+# ----- Scoreboard Affichage -----
+def show_scoreboard(new_entry):
+    scoreboard = load_scoreboard()
+
+    existing = [entry for entry in scoreboard if entry["pseudo"] == new_entry["pseudo"]]
+    if existing:
+        old = existing[0]
+        keep_old = (
+            int(old["niveau"]) > int(new_entry["niveau"]) or
+            (int(old["niveau"]) == int(new_entry["niveau"]) and float(old["progression"]) > float(new_entry["progression"])) or
+            (int(old["niveau"]) == int(new_entry["niveau"]) and float(old["progression"]) == float(new_entry["progression"]) and float(old["temps"]) < float(new_entry["temps"])) or
+            (int(old["niveau"]) == int(new_entry["niveau"]) and float(old["progression"]) == float(new_entry["progression"]) and float(old["temps"]) == float(new_entry["temps"]) and float(old["score"]) >= float(new_entry["score"]))
         )
+        if not keep_old:
+            scoreboard = [entry for entry in scoreboard if entry["pseudo"] != new_entry["pseudo"]]
+            scoreboard.append(new_entry)
+    else:
+        scoreboard.append(new_entry)
 
-cv2.destroyAllWindows()
+    scoreboard = [entry for entry in scoreboard if all(k in entry for k in ['niveau', 'progression', 'temps', 'score'])]
+    scoreboard.sort(key=lambda x: (
+        -int(x["niveau"]),
+        -float(x["progression"]),
+        float(x["temps"]),
+        -float(x["score"])
+    ))
+
+    save_scoreboard(scoreboard)
+
+
+    # ----- Affichage Pygame -----
+    showing = True
+    font_title = pygame.font.SysFont(FONT_NAME, 28, bold=True)
+    font_data = pygame.font.SysFont(FONT_NAME, 22)
+
+    while showing:
+        screen.fill((0, 0, 0))
+        title = font_title.render("Classement des Joueurs", True, (255, 255, 255))
+        screen.blit(title, (SCREEN_WIDTH // 2 - title.get_width() // 2, 30))
+
+        headers = ["#", "Pseudo", "Niveau", "Progression (%)", "Temps (s)", "Score"]
+        col_widths = [40, 200, 100, 170, 110, 100]
+        for i, header in enumerate(headers):
+            label = font_data.render(header, True, (255, 255, 0))
+            screen.blit(label, (50 + sum(col_widths[:i]), 80))
+            pygame.draw.line(screen, (255, 255, 255), (50 + sum(col_widths[:i]), 75), (50 + sum(col_widths[:i]), 500), 1)
+
+        for idx, entry in enumerate(scoreboard[:10]):
+            y = 120 + idx * 35
+            row = [
+                str(idx + 1),
+                entry["pseudo"],
+                entry["niveau"],
+                entry["progression"],
+                entry["temps"],
+                entry["score"]
+            ]
+            for i, value in enumerate(row):
+                txt = font_data.render(str(value) , True, (255, 255, 255))
+                screen.blit(txt, (50 + sum(col_widths[:i]), y))
+
+        # Boutons
+        button_font = pygame.font.SysFont(FONT_NAME, 24)
+        replay_btn = pygame.Rect(250, 540, 120, 40)
+        quit_btn = pygame.Rect(430, 540, 120, 40)
+
+        pygame.draw.rect(screen, (0, 128, 0), replay_btn)
+        pygame.draw.rect(screen, (200, 0, 0), quit_btn)
+
+        screen.blit(button_font.render("Rejouer", True, (255, 255, 255)), (replay_btn.x + 20, replay_btn.y + 8))
+        screen.blit(button_font.render("Quitter", True, (255, 255, 255)), (quit_btn.x + 25, quit_btn.y + 8))
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                showing = False
+                pygame.quit()
+                exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if replay_btn.collidepoint(event.pos):
+                    main()
+                elif quit_btn.collidepoint(event.pos):
+                    pygame.quit()
+                    exit()
+
+        clock.tick(30)
+
+# ----- Main -----
+def main():
+    pseudo = ask_pseudo()
+    stats = play_game(pseudo)
+    show_scoreboard(stats)
+    
+
+if __name__ == "__main__":
+    main()
+
+
+

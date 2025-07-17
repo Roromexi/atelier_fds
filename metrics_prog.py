@@ -10,7 +10,7 @@ class MetricLogger():
             f.write(
                 f"{'Episode':>8}{'Step':>8}{'Epsilon':>10}{'MeanReward':>15}"
                 f"{'MeanLength':>15}{'MeanLoss':>15}{'MeanQValue':>15}"
-                f"{'TimeDelta':>15}{'Time':>20}{'FlagGet':>10}{'Progression':>12}\n"  # ✅ colonne ajoutée
+                f"{'TimeDelta':>15}{'Time':>20}{'FlagGet':>10}{'Progression':>12}\n"  
             )
 
         self.ep_rewards_plot = save_dir / "reward_plot.jpg"
@@ -67,11 +67,11 @@ class MetricLogger():
         self.curr_ep_q = 0.0
         self.curr_ep_loss_length = 0
 
-    def record(self, episode, epsilon, step, flag_get=0, progression = 0):
-        mean_ep_reward = np.round(np.mean(self.ep_rewards[-100:]), 3)
-        mean_ep_length = np.round(np.mean(self.ep_lengths[-100:]), 3)
-        mean_ep_loss = np.round(np.mean(self.ep_avg_losses[-100:]), 3)
-        mean_ep_q = np.round(np.mean(self.ep_avg_qs[-100:]), 3)
+    def record(self, episode, epsilon, step, progression = 0,flag_get=0):
+        mean_ep_reward = np.round(np.mean(self.ep_rewards[-50:]), 3) # fait une moyenne sur les 50 derniers épisodes et arrondi à 3 chiffres après la virgule
+        mean_ep_length = np.round(np.mean(self.ep_lengths[-50:]), 3)
+        mean_ep_loss = np.round(np.mean(self.ep_avg_losses[-50:]), 3)
+        mean_ep_q = np.round(np.mean(self.ep_avg_qs[-50:]), 3)
         self.moving_avg_ep_rewards.append(mean_ep_reward)
         self.moving_avg_ep_lengths.append(mean_ep_length)
         self.moving_avg_ep_avg_losses.append(mean_ep_loss)
