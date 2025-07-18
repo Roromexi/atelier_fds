@@ -43,7 +43,7 @@ mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=sav
 
 logger = MetricLogger(save_dir)
 
-episodes = 14 # Nor
+episodes = 14000
 level_finished = 0
 for e in range(episodes):
 
@@ -67,8 +67,12 @@ for e in range(episodes):
         next_state, reward, done, info = env.step(action)
 
         mario.cache(state, next_state, action, reward, done)
-        logger.log_step(reward, None, None)
+
+        q, loss = mario.learn()
+
+        logger.log_step(reward, loss, q)
         state = next_state
+
 
 
         # Calcul de la progression 
