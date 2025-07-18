@@ -1,3 +1,4 @@
+#-------Importations--------
 import random, datetime
 from pathlib import Path
 
@@ -26,7 +27,7 @@ env = ResizeObservation(env, shape=84)
 env = TransformObservation(env, f=lambda x: x / 255.)
 env = FrameStack(env, num_stack=4)
 
-# ✅ Patch pour désactiver l'affichage et éviter pyglet
+# Patch pour désactiver l'affichage et éviter pyglet
 env.render = lambda *args, **kwargs: None
 
 env.reset()
@@ -35,8 +36,9 @@ env.reset()
 save_dir = Path('checkpoints') / datetime.datetime.now().strftime('%Y-%m-%dT%H-%M-%S')
 save_dir.mkdir(parents=True)
 
-checkpoint = Path('trained_mario.chkpt')
-mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=save_dir, checkpoint=checkpoint)
+# Si on veut un checkpoint pour une IA plus avancée, enlever None et laisser Path
+checkpoint = None #Path('trained_mario.chkpt')
+mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=save_dir, checkpoint=None) # Mettre checkpoint à la place de None
 mario.exploration_rate = mario.exploration_rate_min
 
 logger = MetricLogger(save_dir)
@@ -71,7 +73,7 @@ for e in range(episodes):
 
         # Calcul de la progression 
         distance = info.get("x_pos", 0)
-        percent_done = min(distance / 3155, 1.0) * 100 
+        progression_ep = min(distance / 3155, 1.0) * 100 
 
         #Condition d'arret si le mario atteind le drapeau 
         if info['flag_get']:
@@ -85,15 +87,14 @@ for e in range(episodes):
             print("done!")
             break
 
-    logger.log_episode()
+    logger.log_episode(progression_ep)
 
-    if e % 1 == 0:
+    if e % 5 == 0:
         logger.record(
             episode=e,
             epsilon=mario.exploration_rate,
             step=mario.curr_step,
-            flag_get = level_finished, 
-            progression = percent_done 
+            flag_get = level_finished
         )
 
 
