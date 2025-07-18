@@ -43,12 +43,13 @@ mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=sav
 logger = MetricLogger(save_dir)
 
 episodes = 100
-
+level_finished = 0
 ### for Loop that train the model num_episodes times by playing the game
 for e in range(episodes):
 
     state = env.reset()
-    level_finished = 0
+    avancee = 0
+    position = 0 
 
     # Play the game!
     while True:
@@ -74,7 +75,11 @@ for e in range(episodes):
         # 9. Update state
         state = next_state
 
-        # 10. Check if end of game
+        # 10. Calcul de la progression 
+        distance = info.get("x_pos", 0)
+        progression_ep = min(distance / 3155, 1.0) * 100 
+
+        # 11. Check if end of game
         if info['flag_get']:
             level_finished += 1
             print(f"Time = {400 - info['time']} secondes")
@@ -85,9 +90,9 @@ for e in range(episodes):
             print("done!")
             break
 
-    logger.log_episode()
+    logger.log_episode(progression_ep)
 
-    if e % 1 == 0:
+    if e % 5 == 0:
         logger.record(
             episode=e,
             epsilon=mario.exploration_rate,

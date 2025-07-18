@@ -39,11 +39,11 @@ save_dir.mkdir(parents=True)
 # Si on veut un checkpoint pour une IA plus avancée, enlever None et laisser Path
 checkpoint = None #Path('trained_mario.chkpt')
 mario = Mario(state_dim=(4, 84, 84), action_dim=env.action_space.n, save_dir=save_dir, checkpoint=None) # Mettre checkpoint à la place de None
-mario.exploration_rate = mario.exploration_rate_min
+#mario.exploration_rate = mario.exploration_rate_min
 
 logger = MetricLogger(save_dir)
 
-episodes = 2000
+episodes = 200
 level_finished = 0
 for e in range(episodes):
 
