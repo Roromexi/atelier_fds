@@ -15,7 +15,7 @@ SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600 # Fond
 BACKGROUND_COLOR = (135, 206, 250) # couleurs du fond
 FONT_NAME = "arial"
 FONT_SIZE = 24
-SCOREBOARD_FILE = "scoreboard.csv" # fichier où sont stockés les scores 
+SCOREBOARD_FILE = "CSV/scoreboard.csv" # fichier où sont stockés les scores 
 CURRENT_LEVEL = 1
 LEVEL_DISTANCES = {1: 3155, 2: 3155, 3: 2425, 4: 2260} # position du drapeau de chaque niveau du monde 1 sur l'axe x
 

@@ -43,7 +43,7 @@ def log_to_csv(log_file_path, csv_file_path):
             new_rows.append(row)
 
     if not new_rows:
-        print("✅ Aucune nouvelle ligne à ajouter.")
+        print(" Aucune nouvelle ligne à ajouter.")
         return
 
     write_header = not os.path.exists(csv_file_path) or os.stat(csv_file_path).st_size == 0
@@ -58,7 +58,7 @@ def log_to_csv(log_file_path, csv_file_path):
             writer.writerow(row[:len(headers)])
 
 
-    print(f"✅ {len(new_rows)} nouvelles lignes ajoutées à {csv_file_path}")
+    print(f"{len(new_rows)} nouvelles lignes ajoutées à {csv_file_path}")
 
 
 # -----------------------
@@ -67,8 +67,8 @@ def log_to_csv(log_file_path, csv_file_path):
 
 if __name__ == "__main__":
     
-    fichier_log = "checkpoints/2025-07-18T08-32-57/log"
-    fichier_csv = "CSV_YML/log.csv"
+    fichier_log = "checkpoints/2025-07-18T08-32-57/log" # changer cette ligen en fonction du log que vous voulez utilisé pour le graphique
+    fichier_csv = "CSV/log.csv"
     
     # Lancer l'importation
     log_to_csv(fichier_log, fichier_csv)
