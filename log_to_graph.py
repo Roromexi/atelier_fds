@@ -1,5 +1,8 @@
+#%%
 import csv
 import os
+import pandas as pd
+import matplotlib.pyplot as plt
 
 # Fonction pour découper une ligne de log en liste de champs
 def parse_log_line(line):
@@ -50,7 +53,10 @@ def log_to_csv(log_file_path, csv_file_path):
         writer = csv.writer(csvfile)
         if write_header:
             writer.writerow(headers)  
-        writer.writerows(new_rows)  
+        for row in new_rows:
+            # Écrit uniquement les colonnes correspondant à l'en-tête (évite la colonne en trop)
+            writer.writerow(row[:len(headers)])
+
 
     print(f"✅ {len(new_rows)} nouvelles lignes ajoutées à {csv_file_path}")
 
@@ -58,10 +64,25 @@ def log_to_csv(log_file_path, csv_file_path):
 # -----------------------
 # Exemple d'utilisation
 # -----------------------
+
 if __name__ == "__main__":
     
-    fichier_log = "checkpoints/2025-07-18T08-08-12/log"
+    fichier_log = "checkpoints/2025-07-18T08-32-57/log"
     fichier_csv = "CSV_YML/log.csv"
     
     # Lancer l'importation
     log_to_csv(fichier_log, fichier_csv)
+
+    
+    df = pd.read_csv(fichier_csv)
+    x = df['Episode']
+    y = df['MeanProg']
+    plt.figure()
+    plt.plot(x,y)
+    plt.title("Progression par parties jouées")
+    plt.ylabel("Progression en %")
+    plt.xlabel("Parties jouées")
+    plt.grid(True)
+    plt.savefig(fichier_log[:-3]+"prog_ia.png",dpi=300)
+    #plt.show()
+
